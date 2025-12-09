@@ -69,6 +69,7 @@ const Index = () => {
         {/* Footer */}
         <footer className="text-center py-8 mt-8 text-sm text-muted-foreground">
           <p>Hecho con ✨ creatividad y código</p>
+          <p className="mt-2">© 2025/2026 | Creado por Profesor Bill Papas</p>
         </footer>
       </div>
     </main>
