@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { GenerativeCanvas, GenerativeCanvasRef } from '@/components/GenerativeCanvas';
 import { ControlPanel } from '@/components/ControlPanel';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { ArtSettings } from '@/types/generativeArt';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { toast } from 'sonner';
 
 const DEFAULT_SETTINGS: ArtSettings = {
@@ -16,26 +18,67 @@ const DEFAULT_SETTINGS: ArtSettings = {
 
 const Index = () => {
   const [settings, setSettings] = useState<ArtSettings>(DEFAULT_SETTINGS);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const canvasRef = useRef<GenerativeCanvasRef>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleSettingsChange = (newSettings: Partial<ArtSettings>) => {
+  const handleSettingsChange = useCallback((newSettings: Partial<ArtSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  }, []);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     canvasRef.current?.downloadImage();
     toast.success('¡Imagen descargada!', {
       description: 'Tu arte generativo ha sido guardado como PNG.',
     });
-  };
+  }, []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     canvasRef.current?.clearCanvas();
     setSettings(DEFAULT_SETTINGS);
     toast.info('Canvas reiniciado', {
       description: 'Se han restaurado los valores predeterminados.',
     });
-  };
+  }, []);
+
+  const handleToggleFullscreen = useCallback(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+        toast.success('Modo pantalla completa', {
+          description: 'Presiona Esc o F para salir.',
+        });
+      }).catch(() => {
+        toast.error('No se pudo activar pantalla completa');
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      });
+    }
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    settings,
+    onSettingsChange: handleSettingsChange,
+    onDownload: handleDownload,
+    onReset: handleReset,
+    onToggleFullscreen: handleToggleFullscreen,
+  });
 
   return (
     <main className="min-h-screen bg-background">
@@ -51,7 +94,10 @@ const Index = () => {
 
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 mt-8">
           {/* Canvas Area */}
-          <div className="order-2 lg:order-1 h-[500px] lg:h-[600px]">
+          <div 
+            ref={canvasContainerRef}
+            className={`order-2 lg:order-1 ${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[500px] lg:h-[600px]'}`}
+          >
             <GenerativeCanvas ref={canvasRef} settings={settings} />
           </div>
 
@@ -59,15 +105,20 @@ const Index = () => {
           <div className="order-1 lg:order-2">
             <ControlPanel
               settings={settings}
+              isFullscreen={isFullscreen}
               onSettingsChange={handleSettingsChange}
               onDownload={handleDownload}
               onReset={handleReset}
+              onToggleFullscreen={handleToggleFullscreen}
             />
           </div>
         </div>
 
         {/* Footer */}
         <footer className="text-center py-8 mt-8 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <KeyboardShortcutsHelp />
+          </div>
           <p>Hecho con ✨ creatividad y código</p>
           <p className="mt-2">© 2025/2026 | Creado por Profesor Bill Papas</p>
         </footer>

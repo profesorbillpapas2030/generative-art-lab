@@ -1,17 +1,21 @@
-import { Pause, Play, Download, RotateCcw } from 'lucide-react';
+import { Pause, Play, Download, RotateCcw, Maximize, Minimize } from 'lucide-react';
 
 interface ActionButtonsProps {
   isPlaying: boolean;
+  isFullscreen: boolean;
   onPlayPause: () => void;
   onDownload: () => void;
   onReset: () => void;
+  onToggleFullscreen: () => void;
 }
 
 export function ActionButtons({
   isPlaying,
+  isFullscreen,
   onPlayPause,
   onDownload,
   onReset,
+  onToggleFullscreen,
 }: ActionButtonsProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -25,6 +29,20 @@ export function ActionButtons({
           <>
             <Play className="w-5 h-5" />
             <span>Reproducir</span>
+          </>
+        )}
+      </button>
+
+      <button onClick={onToggleFullscreen} className="action-button-secondary">
+        {isFullscreen ? (
+          <>
+            <Minimize className="w-5 h-5" />
+            <span>Salir Pantalla Completa</span>
+          </>
+        ) : (
+          <>
+            <Maximize className="w-5 h-5" />
+            <span>Pantalla Completa</span>
           </>
         )}
       </button>
