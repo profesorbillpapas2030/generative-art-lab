@@ -3,26 +3,37 @@ import { ModeSelector } from './ModeSelector';
 import { PaletteSelector } from './PaletteSelector';
 import { ControlSlider } from './ControlSlider';
 import { ActionButtons } from './ActionButtons';
+import { PresetSelector } from './PresetSelector';
 
 interface ControlPanelProps {
   settings: ArtSettings;
+  isFullscreen: boolean;
   onSettingsChange: (settings: Partial<ArtSettings>) => void;
   onDownload: () => void;
   onReset: () => void;
+  onToggleFullscreen: () => void;
 }
 
 export function ControlPanel({
   settings,
+  isFullscreen,
   onSettingsChange,
   onDownload,
   onReset,
+  onToggleFullscreen,
 }: ControlPanelProps) {
   return (
-    <div className="glass-strong rounded-2xl p-6 space-y-6">
+    <div className="glass-strong rounded-2xl p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
       <div className="text-center space-y-1">
         <h2 className="text-xl font-bold text-gradient">Controles</h2>
         <p className="text-xs text-muted-foreground">Personaliza tu arte</p>
       </div>
+
+      <PresetSelector
+        onSelectPreset={(presetSettings) => onSettingsChange(presetSettings)}
+      />
+
+      <div className="h-px bg-border/50" />
 
       <ModeSelector
         currentMode={settings.mode}
@@ -75,9 +86,11 @@ export function ControlPanel({
 
       <ActionButtons
         isPlaying={settings.isPlaying}
+        isFullscreen={isFullscreen}
         onPlayPause={() => onSettingsChange({ isPlaying: !settings.isPlaying })}
         onDownload={onDownload}
         onReset={onReset}
+        onToggleFullscreen={onToggleFullscreen}
       />
     </div>
   );
